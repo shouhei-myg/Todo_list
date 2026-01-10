@@ -77,7 +77,7 @@ function App() {
                 onChange={(e) => handleEdit(todo.id, e.target.value)} 
                 className='inputText' 
                 value={todo.inputValue}
-                disabled={todo.checked}
+                disabled={!todo.checked}
               />
               <input 
                 type="checkbox" 
