@@ -1,32 +1,46 @@
 import './App.css';
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 function App() {
+
+  useEffect(() => {
+    const fetchTodos = async () => {
+      const res = await fetch("http://localhost:3001/todos");
+      const data = await res.json();
+      setTodos(data);
+    };
+    fetchTodos();
+  }, []);
+  
   const [inputValue, setInputValue] = useState("");
   const [todos, setTodos] = useState<Todo[]>([]);
   type Todo = {
-    inputValue: string;
     id: number;
+    inputValue: string;
     checked: boolean;
     createdAt: number;
-  }
+  };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-  }
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    const newTodo: Todo = {
-      inputValue: inputValue,
-      id: todos.length,
-      checked: false,
-      createdAt: Date.now()
-    }
-    setTodos([newTodo, ...todos]);
+    if (!inputValue.trim()) return;
+  
+    await fetch("http://localhost:3001/todos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        inputValue,
+        checked: false,
+        createdAt: Date.now(),
+      }),
+    });
+  
     setInputValue("");
-  }
+  
+    const res = await fetch("http://localhost:3001/todos");
+    const data = await res.json();
+    setTodos(data);
+  };
 
   const handleEdit = (id: number, inputValue: string) => {
     const newTodos =todos.map((todo) => {
@@ -38,21 +52,28 @@ function App() {
     setTodos(newTodos);
   }
 
-  const handleCheckd = (id: number, checked: boolean) => {
-    const newTodos =todos.map((todo) => {
-      if (todo.id === id) {
-        todo.checked = !checked;
-      }
-      return todo
-    })
-    setTodos(newTodos);
-  }
+  const handleCheckd = async (id: number, checked: boolean) => {
+    await fetch(`http://localhost:3001/todos/${id}/check`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ checked: !checked }),
+    });
+
+    // ★ 必ず GET し直す
+    const res = await fetch("http://localhost:3001/todos");
+    const data = await res.json();
+    setTodos(data);
+  };
 
   const handleDelete = (id: number) => {
     const newTodos = todos.filter((todo) => todo.id !== id)
     setTodos(newTodos);
-  }
+  }  
 
+  if (!Array.isArray(todos)) {
+    console.error("todos is not array:", todos);
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="App">
@@ -62,7 +83,7 @@ function App() {
           <input 
             type="text" 
             value={inputValue}
-            onChange={(e) => handleChange(e)} 
+            onChange={(e) => setInputValue(e.target.value)} 
             className='inputText' 
             required
           />
