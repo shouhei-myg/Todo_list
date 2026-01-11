@@ -42,15 +42,17 @@ function App() {
     setTodos(data);
   };
 
-  const handleEdit = (id: number, inputValue: string) => {
-    const newTodos =todos.map((todo) => {
-      if (todo.id === id) {
-        todo.inputValue = inputValue;
-      }
-      return todo
-    })
-    setTodos(newTodos);
-  }
+  const handleEdit = async (id: number, inputValue: string) => {
+    await fetch(`http://localhost:3001/todos/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ inputValue }),
+    });
+  
+    const res = await fetch("http://localhost:3001/todos");
+    const data = await res.json();
+    setTodos(data);
+  };
 
   const handleCheckd = async (id: number, checked: boolean) => {
     await fetch(`http://localhost:3001/todos/${id}/check`, {
@@ -65,10 +67,16 @@ function App() {
     setTodos(data);
   };
 
-  const handleDelete = (id: number) => {
-    const newTodos = todos.filter((todo) => todo.id !== id)
-    setTodos(newTodos);
-  }  
+  const handleDelete = async (id: number) => {
+    await fetch(`http://localhost:3001/todos/${id}`, {
+      method: "DELETE",
+    });
+  
+    const res = await fetch("http://localhost:3001/todos");
+    const data = await res.json();
+    setTodos(data);
+  };
+  
 
   if (!Array.isArray(todos)) {
     console.error("todos is not array:", todos);
@@ -93,15 +101,23 @@ function App() {
           {todos.map((todo) => (
             <li key={todo.id}>
               <p>{new Date(todo.createdAt).toLocaleString()}</p>
-              <input 
-                type="text" 
-                onChange={(e) => handleEdit(todo.id, e.target.value)} 
-                className='inputText' 
+              <input
+                type="text"
                 value={todo.inputValue}
                 disabled={!todo.checked}
+                className="inputText"
+                onChange={(e) =>
+                  setTodos((prev) =>
+                    prev.map((t) =>
+                      t.id === todo.id ? { ...t, inputValue: e.target.value } : t
+                    )
+                  )
+                }
+                onBlur={(e) => handleEdit(todo.id, e.target.value)}
               />
               <input 
                 type="checkbox" 
+                checked={todo.checked}
                 onChange={(e) => handleCheckd(todo.id, todo.checked)} 
               />
               <button  onClick={() => handleDelete(todo.id)}>削除</button>
