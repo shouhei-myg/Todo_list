@@ -51,15 +51,6 @@ function App() {
   };
 
   // ---------------------------
-  // チェックボックス押下時（未完了のタスクのみ編集モード）
-  // ---------------------------
-  const handleStatus = async (id: number, status: "todo" | "done") => {
-    if (status === "done") return; // 完了済みは何もしない
-    await toggleTodo(id, "done");  // /status API 呼び出し
-    loadTodos();
-  };
-
-  // ---------------------------
   // Todo削除
   // ---------------------------
   const handleDelete = async (id: number) => {
@@ -89,23 +80,28 @@ function App() {
 
         {/* ページ切替ボタン */}
         <div style={{ marginBottom: "16px" }}>
-          <button onClick={() => setView("todo")}>未完了</button>
-          <button onClick={() => setView("done")} style={{ marginLeft: "8px" }}>
-            完了済み
+          <button onClick={() => setView(view === "todo" ? "done" : "todo")}>
+            {view === "todo" ? "完了一覧" : "未完了一覧"}
           </button>
         </div>
-
         {/* 新規Todo入力 */}
-        <form onSubmit={handleSubmit}>
-          <input 
-            type="text" 
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)} 
-            className='inputText' 
-            required
-          />
-          <input type="submit" value="作成" className="submitButton" disabled={!inputValue.trim()}/>
-        </form>
+        {view === "todo" && (
+          <form onSubmit={handleSubmit}>
+            <input 
+              type="text" 
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)} 
+              className="inputText" 
+              required
+            />
+            <input
+              type="submit"
+              value="作成"
+              className="submitButton"
+              disabled={!inputValue.trim()}
+            />
+          </form>
+        )}
 
         {/* Todo一覧 */}
         <ul className='todoList'>
